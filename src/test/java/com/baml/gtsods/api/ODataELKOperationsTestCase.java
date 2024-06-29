@@ -22,6 +22,6 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
                                       .getPayload()
                                       .getValue()).toString();
 
-    assertThat(payloadValue, is("{\"query\":{\"match_phrase\":{\"name\":\"Naveen\"},\"size\":500,\"_source\":{\"includes\":[\"*\"]},\"from\":0}}"));
+    assertThat(payloadValue, is("{\"query\":{\"match_phrase\":{\"newName\":\"Naveen\"},\"size\":500,\"_source\":{\"includes\":[\"*\"]},\"from\":0}}"));
   }
 }

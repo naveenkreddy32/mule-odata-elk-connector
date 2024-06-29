@@ -1,3 +1,2 @@
-index:
-  fields:
-    field1: "newField1"
+ach:
+  name: "newName"

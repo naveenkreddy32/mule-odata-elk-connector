@@ -4,13 +4,9 @@
       xmlns:odataelk="http://www.mulesoft.org/schema/mule/odataelk" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
           http://www.mulesoft.org/schema/mule/odataelk http://www.mulesoft.org/schema/mule/odataelk/current/mule-odataelk.xsd">
 
-<!--     <odataelk:config name="config" configId="configId"> -->
-<!--         <odataelk:connection requiredParameter="aValue" /> -->
-<!--     </odataelk:config> -->
-
     <configuration-properties doc:name="Configuration properties" doc:id="c923de42-1e79-4d12-9303-9f480c7da381" file="dev.yaml" />
 	<flow name="parse">
-        <odataelk:parse filter="name eq 'Naveen'"/>
+        <odataelk:parse filter="name eq 'Naveen'" elkIndex="ach"/>
     </flow>
 
 </mule>
