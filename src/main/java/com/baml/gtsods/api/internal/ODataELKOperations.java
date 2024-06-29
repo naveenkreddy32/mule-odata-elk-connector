@@ -2,11 +2,13 @@ package com.baml.gtsods.api.internal;
 
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
+import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
+import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.api.component.ConfigurationProperties;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,6 +20,9 @@ import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.baml.gtsods.api.internal.exceptions.ODataELKErrorTypeProvider;
+import com.baml.gtsods.api.internal.exceptions.ODataELKErrors;
 
 /**
  * This class is a container for operations, every public method in this class
@@ -63,16 +68,25 @@ public class ODataELKOperations {
 	}
 	
 	@MediaType(value = ANY, strict = false)
-	public JSONObject parse() throws BadRequestException {
+	@Throws(ODataELKErrorTypeProvider.class)
+	public JSONObject parse()  {
+		try {
 		logger.info("Parsing filter: {}", filter);
 		JSONObject result = parseOrExpr(new Tokenizer(filter));
 		JSONObject finalResult = applyOptions(result, select, top, offset);
 		// String resultString = finalResult.toString();
 		logger.info("Parsed Elasticsearch DSL: {}", finalResult);
 		return finalResult;
+		}
+		catch (ModuleException e) {
+			throw e;
+		}
+		catch (Exception e) {
+			throw new ModuleException("An unknown error occurred", ODataELKErrors.UNKNOWN_ERROR, e);
+		}
 	}
 
-	private JSONObject parseOrExpr(Tokenizer tokenizer) throws BadRequestException {
+	private JSONObject parseOrExpr(Tokenizer tokenizer)  {
 		List<JSONObject> orList = new ArrayList<>();
 		do {
 			orList.add(parseAndExpr(tokenizer));
@@ -87,7 +101,7 @@ public class ODataELKOperations {
 		return orQuery;
 	}
 
-	private JSONObject parseAndExpr(Tokenizer tokenizer) throws BadRequestException {
+	private JSONObject parseAndExpr(Tokenizer tokenizer)  {
 		List<JSONObject> andList = new ArrayList<>();
 		do {
 			andList.add(parseComparisonExpr(tokenizer));
@@ -102,7 +116,7 @@ public class ODataELKOperations {
 		return andQuery;
 	}
 
-	private JSONObject parseComparisonExpr(Tokenizer tokenizer) throws BadRequestException {
+	private JSONObject parseComparisonExpr(Tokenizer tokenizer)  {
 		if (tokenizer.consume("(")) {
 			JSONObject expr = parseOrExpr(tokenizer);
 			tokenizer.consume(")");
@@ -112,7 +126,7 @@ public class ODataELKOperations {
 		String keyName = tokenizer.next();
 		String left = getProperty(keyName);
 		if (left == null) {
-			throw new BadRequestException("Invalid input field '" + keyName + "'");
+			throw new ModuleException("Invalid input field '" + keyName + "'", ODataELKErrors.BAD_REQUEST);
 		}
 		String op = tokenizer.next();
 		Object right = tokenizer.nextValue();

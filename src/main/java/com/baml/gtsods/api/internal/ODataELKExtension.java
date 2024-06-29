@@ -4,6 +4,9 @@ import org.mule.runtime.extension.api.annotation.Extension;
 import org.mule.runtime.extension.api.annotation.Operations;
 import org.mule.runtime.extension.api.annotation.Configurations;
 import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
+import org.mule.runtime.extension.api.annotation.error.ErrorTypes;
+
+import com.baml.gtsods.api.internal.exceptions.ODataELKErrors;
 
 
 /**
@@ -14,6 +17,7 @@ import org.mule.runtime.extension.api.annotation.dsl.xml.Xml;
 @Extension(name = "ODataELK")
 @Configurations(ODataELKConfiguration.class)
 @Operations({ODataELKOperations.class})
+@ErrorTypes(ODataELKErrors.class)
 public class ODataELKExtension {
 
 }
