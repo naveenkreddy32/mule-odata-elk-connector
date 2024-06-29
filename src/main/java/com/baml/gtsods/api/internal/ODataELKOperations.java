@@ -2,6 +2,7 @@ package com.baml.gtsods.api.internal;
 
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
+import org.mule.runtime.extension.api.annotation.Alias;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
@@ -69,7 +70,8 @@ public class ODataELKOperations {
 	
 	@MediaType(value = ANY, strict = false)
 	@Throws(ODataELKErrorTypeProvider.class)
-	public JSONObject parse()  {
+	@Alias("generate-elk-dsl-query")
+	public JSONObject generateELKDSLQuery()  {
 		try {
 		logger.info("Parsing filter: {}", filter);
 		JSONObject result = parseOrExpr(new Tokenizer(filter));
@@ -82,7 +84,7 @@ public class ODataELKOperations {
 			throw e;
 		}
 		catch (Exception e) {
-			throw new ModuleException("An unknown error occurred in ODATA ELK Module", ODataELKErrors.UNKNOWN_ERROR, e);
+			throw new ModuleException("An unknown error occurred in ODATA ELK Module", ODataELKErrors.INTERNAL_SERVER_ERROR, e);
 		}
 	}
 

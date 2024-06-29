@@ -12,7 +12,7 @@ public class ODataELKErrorTypeProvider implements ErrorTypeProvider {
     public Set<ErrorTypeDefinition> getErrorTypes() {
         HashSet<ErrorTypeDefinition> errorTypes = new HashSet<>();
         errorTypes.add(ODataELKErrors.BAD_REQUEST);
-        errorTypes.add(ODataELKErrors.UNKNOWN_ERROR);
+        errorTypes.add(ODataELKErrors.INTERNAL_SERVER_ERROR);
         return errorTypes;
     }
 }

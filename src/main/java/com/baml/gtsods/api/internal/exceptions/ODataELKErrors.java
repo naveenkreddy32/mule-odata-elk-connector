@@ -4,5 +4,5 @@ import org.mule.runtime.extension.api.error.ErrorTypeDefinition;
 
 public enum ODataELKErrors implements ErrorTypeDefinition<ODataELKErrors> {
     BAD_REQUEST,
-    UNKNOWN_ERROR;
+    INTERNAL_SERVER_ERROR;
 }

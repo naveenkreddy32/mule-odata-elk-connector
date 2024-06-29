@@ -6,7 +6,7 @@
 
     <configuration-properties doc:name="Configuration properties" doc:id="c923de42-1e79-4d12-9303-9f480c7da381" file="dev.yaml" />
 	<flow name="parse">
-        <odataelk:parse filter="name eq 'Naveen'" elkIndex="ach"/>
+        <odataelk:generate-elk-dsl-query filter="name eq 'Naveen'" elkIndex="ach"/>
     </flow>
 
 </mule>
