@@ -82,7 +82,7 @@ public class ODataELKOperations {
 			throw e;
 		}
 		catch (Exception e) {
-			throw new ModuleException("An unknown error occurred", ODataELKErrors.UNKNOWN_ERROR, e);
+			throw new ModuleException("An unknown error occurred in ODATA ELK Module", ODataELKErrors.UNKNOWN_ERROR, e);
 		}
 	}
 
