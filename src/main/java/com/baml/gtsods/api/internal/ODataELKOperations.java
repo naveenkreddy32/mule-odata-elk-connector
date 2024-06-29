@@ -29,50 +29,48 @@ import org.slf4j.LoggerFactory;
 public class ODataELKOperations {
 
 	private final Logger logger = LoggerFactory.getLogger(ODataELKOperations.class);
-	
+
 	@Parameter
-    @Example("name eq 'Naveen'")
-    @DisplayName("Filter")
-    private String filter;
-	
+	@Example("name eq 'Naveen'")
+	@DisplayName("Filter")
+	private String filter;
+
 	@Parameter
 	@Optional(defaultValue = "*")
-    @Example("field1,field2")
-    @DisplayName("Select")
-    private String select;
-	
+	@Example("field1,field2")
+	@DisplayName("Select")
+	private String select;
+
 	@Parameter
 	@Optional(defaultValue = "0")
-    @Example("0")
-    @DisplayName("Offset")
-    private int skip;
-	
+	@Example("0")
+	@DisplayName("Offset")
+	private int skip;
+
 	@Parameter
 	@Optional(defaultValue = "500")
-    @Example("500")
-    @DisplayName("Max")
-    private int top;
-	
+	@Example("500")
+	@DisplayName("Max")
+	private int top;
+
 	@Inject
 	private ConfigurationProperties configurationProperties;
-	
+
 	private String getProperty(String name) {
-	     return configurationProperties.resolveStringProperty(name).orElse(null);
-	  }
-	
+		return configurationProperties.resolveStringProperty(name).orElse(null);
+	}
+
 	@MediaType(value = ANY, strict = false)
 	public JSONObject parse() {
 		logger.info("Parsing filter: {}", filter);
 		JSONObject result = parseOrExpr(new Tokenizer(filter));
 		JSONObject finalResult = applyOptions(result, select, top, skip);
-		//String resultString = finalResult.toString();
+		// String resultString = finalResult.toString();
 		logger.info("Parsed Elasticsearch DSL: {}", finalResult);
 		logger.info("property is: {}", getProperty("index.fields.field1"));
 		return finalResult;
 	}
-	
-	
-	
+
 	private JSONObject parseOrExpr(Tokenizer tokenizer) {
 		List<JSONObject> orList = new ArrayList<>();
 		do {
@@ -142,21 +140,21 @@ public class ODataELKOperations {
 	}
 
 	private JSONObject applyOptions(JSONObject query, String select, Integer top, Integer offset) {
-        JSONObject options = new JSONObject();
-        options.put("query", query);
-		
+		JSONObject options = new JSONObject();
+		options.put("query", query);
+
 		if (select != null && !select.isEmpty()) {
-            query.put("_source", new JSONObject().put("includes", new JSONArray(select.split(","))));
-        }
-        if (top != null) {
-        	query.put("size", top);
-        }
-        if (offset != null) {
-        	query.put("from", offset);
-        }
-        return options;
-    }
-	
+			query.put("_source", new JSONObject().put("includes", new JSONArray(select.split(","))));
+		}
+		if (top != null) {
+			query.put("size", top);
+		}
+		if (offset != null) {
+			query.put("from", offset);
+		}
+		return options;
+	}
+
 	private class Tokenizer {
 		private final List<String> tokens;
 		private int index = 0;
