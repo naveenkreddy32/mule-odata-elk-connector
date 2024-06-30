@@ -54,7 +54,7 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
 	public void validateFilterBadRequestErrMsg() throws Exception {
 		String filter = "lname eq 'Naveen'";
 		Exception e = flowRunner("parse").withPayload(filter).runExpectingException();
-		assertThat(e.getMessage(), is("Invalid filter field 'lname'. Please check YAML file."));
+		assertThat(e.getMessage(), is("Invalid filter field 'lname'. Please check if its correct/present in YAML file."));
 
 	}
 
@@ -71,7 +71,7 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
 		String filter = "name eq 'Naveen'";
 		String sel = "lname";
 		Exception e = flowRunner("parse").withPayload(filter).withVariable("select", sel).runExpectingException();
-		assertThat(e.getMessage(), is("Invalid select field 'lname'. Please check YAML file."));
+		assertThat(e.getMessage(), is("Invalid select field 'lname'. Please check if its correct/present in YAML file."));
 
 	}
 }

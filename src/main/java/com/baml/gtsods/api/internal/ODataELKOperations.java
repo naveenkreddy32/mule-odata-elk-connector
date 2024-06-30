@@ -114,7 +114,7 @@ public class ODataELKOperations {
 		String keyName = tokenizer.next();
 		String left = getProperty(propPrefix + "." + keyName);
 		if (left == null) {
-			throw new ModuleException("Invalid filter field '" + keyName + "'. Please check YAML file",
+			throw new ModuleException("Invalid filter field '" + keyName + "'. Please check if its correct/present in YAML file",
 					ODataELKErrors.BAD_REQUEST);
 		}
 		String op = tokenizer.next();
@@ -160,7 +160,7 @@ public class ODataELKOperations {
 			for (String field : select.split(",")) {
 				String mappedField = getProperty(propPrefix + "." + field);
 				if (mappedField == null) {
-					throw new ModuleException("Invalid select field '" + field + "'. Please check YAML file",
+					throw new ModuleException("Invalid select field '" + field + "'. Please check if its correct/present in YAML file",
 							ODataELKErrors.BAD_REQUEST);
 				}
 				selectList.add(mappedField);
