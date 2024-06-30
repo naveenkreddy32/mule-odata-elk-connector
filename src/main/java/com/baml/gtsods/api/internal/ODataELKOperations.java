@@ -159,7 +159,7 @@ public class ODataELKOperations {
 
 			for (String field : select.split(",")) {
 				String mappedField = getProperty(propPrefix + "." + field);
-				if (mappedField == null && !field.equals("*")) {
+				if (mappedField == null) {
 					throw new ModuleException("Invalid select field '" + field + "'. Please check YAML file",
 							ODataELKErrors.BAD_REQUEST);
 				}
