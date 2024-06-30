@@ -114,7 +114,7 @@ public class ODataELKOperations {
 		String keyName = tokenizer.next();
 		String left = getProperty(elkIndex + "." + keyName);
 		if (left == null) {
-			throw new ModuleException("Invalid input field '" + keyName + "'", ODataELKErrors.BAD_REQUEST);
+			throw new ModuleException("Invalid input field '" + keyName + "'. Please check YAML file", ODataELKErrors.BAD_REQUEST);
 		}
 		String op = tokenizer.next();
 		Object right = tokenizer.nextValue();

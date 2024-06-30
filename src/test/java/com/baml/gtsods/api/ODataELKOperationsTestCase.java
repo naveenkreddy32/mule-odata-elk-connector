@@ -43,7 +43,7 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
 	public void validateBadRequestErrMsg() throws Exception {
 		String filter = "lname eq 'Naveen'";
 		Exception e = flowRunner("parse").withPayload(filter).runExpectingException();
-		assertThat(e.getMessage(), is("Invalid input field 'lname'."));
+		assertThat(e.getMessage(), is("Invalid input field 'lname'. Please check YAML file."));
 
 	}
 }
