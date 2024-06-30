@@ -40,12 +40,13 @@ public class ODataELKOperations {
 	private ConfigurationProperties configurationProperties;
 
 	private String getProperty(String name) {
+		logger.debug("resolvingProperty: {}", name);
 		return configurationProperties.resolveStringProperty(name).orElse(null);
 	}
 
 	@MediaType(value = ANY, strict = false)
 	@Throws(ODataELKErrorTypeProvider.class)
-	@Alias("generate-elk-dsl-query")
+	@Alias("transform-to-elk-bool")
 	public String generateELKDSLQuery(
 			@Expression(ExpressionSupport.SUPPORTED) @Example("log_*") @DisplayName("ELK Index") @Summary("Elasticsearch Index Name for searching data") @Alias("elkIndex") String elkIndex,
 
@@ -80,9 +81,10 @@ public class ODataELKOperations {
 		if (orList.size() == 1) {
 			return orList.get(0);
 		}
-
+		
 		JSONObject orQuery = new JSONObject();
 		orQuery.put("bool", new JSONObject().put("should", new JSONArray(orList)));
+		logger.debug("parseOrExpr: {}", orQuery);
 		return orQuery;
 	}
 
@@ -98,6 +100,7 @@ public class ODataELKOperations {
 
 		JSONObject andQuery = new JSONObject();
 		andQuery.put("bool", new JSONObject().put("must", new JSONArray(andList)));
+		logger.debug("parseAndExpr: {}", andQuery);
 		return andQuery;
 	}
 
@@ -140,6 +143,7 @@ public class ODataELKOperations {
 		default:
 			throw new IllegalArgumentException("Unsupported comparison operator: " + op);
 		}
+		logger.debug("parseComparisonExpr: {}", comparisonQuery);
 		return comparisonQuery;
 	}
 
@@ -156,6 +160,7 @@ public class ODataELKOperations {
 		if (offset != null) {
 			query.put("from", offset);
 		}
+		logger.debug("applyOptions: {}", options);
 		return options;
 	}
 
@@ -195,7 +200,7 @@ public class ODataELKOperations {
 			if (token.length() > 0) {
 				tokens.add(token.toString());
 			}
-
+			logger.debug("tokenize: {}", tokens);
 			return tokens;
 		}
 
