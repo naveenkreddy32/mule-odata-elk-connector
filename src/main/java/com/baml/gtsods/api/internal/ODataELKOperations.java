@@ -3,14 +3,17 @@ package com.baml.gtsods.api.internal;
 import static org.mule.runtime.extension.api.annotation.param.MediaType.ANY;
 
 import org.mule.runtime.extension.api.annotation.Alias;
+import org.mule.runtime.extension.api.annotation.Expression;
 import org.mule.runtime.extension.api.annotation.error.Throws;
 import org.mule.runtime.extension.api.annotation.param.MediaType;
 import org.mule.runtime.extension.api.annotation.param.Optional;
 import org.mule.runtime.extension.api.annotation.param.Parameter;
 import org.mule.runtime.extension.api.annotation.param.display.DisplayName;
 import org.mule.runtime.extension.api.annotation.param.display.Example;
+import org.mule.runtime.extension.api.annotation.param.display.Summary;
 import org.mule.runtime.extension.api.exception.ModuleException;
 import org.mule.runtime.api.component.ConfigurationProperties;
+import org.mule.runtime.api.meta.ExpressionSupport;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -33,65 +36,45 @@ public class ODataELKOperations {
 
 	private final Logger logger = LoggerFactory.getLogger(ODataELKOperations.class);
 
-	@Parameter
-	@Example("log_*")
-	@DisplayName("ELK Index")
-	private String elkIndex;
-	
-	@Parameter
-	@Example("name eq 'Naveen'")
-	@DisplayName("Filter")
-	private String filter;
-
-	@Parameter
-	@Optional(defaultValue = "*")
-	@Example("field1,field2")
-	@DisplayName("Select")
-	private String select;
-
-	@Parameter
-	@Optional(defaultValue = "0")
-	@Example("0")
-	@DisplayName("Offset")
-	private int offset;
-
-	@Parameter
-	@Optional(defaultValue = "500")
-	@Example("500")
-	@DisplayName("Max")
-	private int top;
-
 	@Inject
 	private ConfigurationProperties configurationProperties;
 
 	private String getProperty(String name) {
-		return configurationProperties.resolveStringProperty(elkIndex + "." + name).orElse(null);
+		return configurationProperties.resolveStringProperty(name).orElse(null);
 	}
-	
+
 	@MediaType(value = ANY, strict = false)
 	@Throws(ODataELKErrorTypeProvider.class)
 	@Alias("generate-elk-dsl-query")
-	public JSONObject generateELKDSLQuery()  {
+	public JSONObject generateELKDSLQuery(
+			@Expression(ExpressionSupport.SUPPORTED) @Example("log_*") @DisplayName("ELK Index") @Summary("Elasticsearch Index Name for searching data") @Alias("elkIndex") String elkIndex,
+
+			@Expression(ExpressionSupport.SUPPORTED) @Example("name eq 'Naveen'") @DisplayName("Filter") @Summary("Filter string with logical and binary operators to filter data") @Alias("filter") String filter,
+
+			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "*") @Example("field1,field2") @DisplayName("Select") @Summary("Comma separated field names to be shown in response.") @Alias("select") String select,
+
+			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "0") @Example("0") @DisplayName("Offset") @Summary("Option to request the number of items in the queried collection that are to be skipped and not included in the result.") @Alias("offset") int offset,
+
+			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "500") @Example("500") @DisplayName("Max") @Summary("Option requests the number of items in the queried collection to be included in the result") @Alias("top") int top) {
 		try {
-		logger.info("Parsing filter: {}", filter);
-		JSONObject result = parseOrExpr(new Tokenizer(filter));
-		JSONObject finalResult = applyOptions(result, select, top, offset);
-		// String resultString = finalResult.toString();
-		logger.info("Parsed Elasticsearch DSL: {}", finalResult);
-		return finalResult;
-		}
-		catch (ModuleException e) {
+			logger.info("Parsing filter: {}", filter);
+			JSONObject result = parseOrExpr(new Tokenizer(filter), elkIndex);
+			JSONObject finalResult = applyOptions(result, select, top, offset);
+			// String resultString = finalResult.toString();
+			logger.info("Parsed Elasticsearch DSL: {}", finalResult);
+			return finalResult;
+		} catch (ModuleException e) {
 			throw e;
-		}
-		catch (Exception e) {
-			throw new ModuleException("An unknown error occurred in ODATA ELK Module", ODataELKErrors.INTERNAL_SERVER_ERROR, e);
+		} catch (Exception e) {
+			throw new ModuleException("An unknown error occurred in ODATA ELK Module",
+					ODataELKErrors.INTERNAL_SERVER_ERROR, e);
 		}
 	}
 
-	private JSONObject parseOrExpr(Tokenizer tokenizer)  {
+	private JSONObject parseOrExpr(Tokenizer tokenizer, String elkIndex) {
 		List<JSONObject> orList = new ArrayList<>();
 		do {
-			orList.add(parseAndExpr(tokenizer));
+			orList.add(parseAndExpr(tokenizer, elkIndex));
 		} while (tokenizer.consume("or"));
 
 		if (orList.size() == 1) {
@@ -103,10 +86,10 @@ public class ODataELKOperations {
 		return orQuery;
 	}
 
-	private JSONObject parseAndExpr(Tokenizer tokenizer)  {
+	private JSONObject parseAndExpr(Tokenizer tokenizer, String elkIndex) {
 		List<JSONObject> andList = new ArrayList<>();
 		do {
-			andList.add(parseComparisonExpr(tokenizer));
+			andList.add(parseComparisonExpr(tokenizer, elkIndex));
 		} while (tokenizer.consume("and"));
 
 		if (andList.size() == 1) {
@@ -118,15 +101,15 @@ public class ODataELKOperations {
 		return andQuery;
 	}
 
-	private JSONObject parseComparisonExpr(Tokenizer tokenizer)  {
+	private JSONObject parseComparisonExpr(Tokenizer tokenizer, String elkIndex) {
 		if (tokenizer.consume("(")) {
-			JSONObject expr = parseOrExpr(tokenizer);
+			JSONObject expr = parseOrExpr(tokenizer, elkIndex);
 			tokenizer.consume(")");
 			return expr;
 		}
 
 		String keyName = tokenizer.next();
-		String left = getProperty(keyName);
+		String left = getProperty(elkIndex + "." + keyName);
 		if (left == null) {
 			throw new ModuleException("Invalid input field '" + keyName + "'", ODataELKErrors.BAD_REQUEST);
 		}

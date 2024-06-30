@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.baml.gtsods.api</groupId>
 	<artifactId>mule-odata-elk-connector</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.5</version>
 	<packaging>mule-extension</packaging>
 	<name>ODataELK Extension</name>
 
