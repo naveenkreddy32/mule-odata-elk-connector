@@ -48,7 +48,7 @@ public class ODataELKOperations {
 	@Throws(ODataELKErrorTypeProvider.class)
 	@Alias("transform-to-elk-bool")
 	public String generateELKDSLQuery(
-			@Expression(ExpressionSupport.SUPPORTED) @Example("log_*") @DisplayName("ELK Index") @Summary("Elasticsearch Index Name for searching data") @Alias("elkIndex") String elkIndex,
+			@Expression(ExpressionSupport.SUPPORTED) @Example("log_*") @DisplayName("ELK Index Fields") @Summary("Configuration property prefix for validating input fields") @Alias("propPrefix") String propPrefix,
 
 			@Expression(ExpressionSupport.SUPPORTED) @Example("name eq 'Naveen'") @DisplayName("Filter") @Summary("Filter string with logical and binary operators to filter data") @Alias("filter") String filter,
 
@@ -59,7 +59,7 @@ public class ODataELKOperations {
 			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "500") @Example("500") @DisplayName("Max") @Summary("Option requests the number of items in the queried collection to be included in the result") @Alias("top") int top) {
 		try {
 			logger.debug("Parsing filter: {}", filter);
-			JSONObject result = parseOrExpr(new Tokenizer(filter), elkIndex);
+			JSONObject result = parseOrExpr(new Tokenizer(filter), propPrefix);
 			JSONObject finalResult = applyOptions(result, select, top, offset);
 			String resultString = finalResult.toString();
 			logger.debug("Generated Elasticsearch DSL: {}", resultString);
@@ -72,10 +72,10 @@ public class ODataELKOperations {
 		}
 	}
 
-	private JSONObject parseOrExpr(Tokenizer tokenizer, String elkIndex) {
+	private JSONObject parseOrExpr(Tokenizer tokenizer, String propPrefix) {
 		List<JSONObject> orList = new ArrayList<>();
 		do {
-			orList.add(parseAndExpr(tokenizer, elkIndex));
+			orList.add(parseAndExpr(tokenizer, propPrefix));
 		} while (tokenizer.consume("or"));
 
 		if (orList.size() == 1) {
@@ -88,10 +88,10 @@ public class ODataELKOperations {
 		return orQuery;
 	}
 
-	private JSONObject parseAndExpr(Tokenizer tokenizer, String elkIndex) {
+	private JSONObject parseAndExpr(Tokenizer tokenizer, String propPrefix) {
 		List<JSONObject> andList = new ArrayList<>();
 		do {
-			andList.add(parseComparisonExpr(tokenizer, elkIndex));
+			andList.add(parseComparisonExpr(tokenizer, propPrefix));
 		} while (tokenizer.consume("and"));
 
 		if (andList.size() == 1) {
@@ -104,15 +104,15 @@ public class ODataELKOperations {
 		return andQuery;
 	}
 
-	private JSONObject parseComparisonExpr(Tokenizer tokenizer, String elkIndex) {
+	private JSONObject parseComparisonExpr(Tokenizer tokenizer, String propPrefix) {
 		if (tokenizer.consume("(")) {
-			JSONObject expr = parseOrExpr(tokenizer, elkIndex);
+			JSONObject expr = parseOrExpr(tokenizer, propPrefix);
 			tokenizer.consume(")");
 			return expr;
 		}
 
 		String keyName = tokenizer.next();
-		String left = getProperty(elkIndex + "." + keyName);
+		String left = getProperty(propPrefix + "." + keyName);
 		if (left == null) {
 			throw new ModuleException("Invalid input field '" + keyName + "'. Please check YAML file", ODataELKErrors.BAD_REQUEST);
 		}

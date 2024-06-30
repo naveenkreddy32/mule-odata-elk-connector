@@ -1,2 +1,3 @@
 ach:
-  name: "newName"
+  fields:
+    name: "newName"

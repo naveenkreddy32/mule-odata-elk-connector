@@ -6,7 +6,7 @@
 
     <configuration-properties doc:name="Configuration properties" doc:id="c923de42-1e79-4d12-9303-9f480c7da381" file="dev.yaml" />
 	<flow name="parse">
-        <odataelk:transform-to-elk-bool filter="#[payload]" elkIndex="ach"/>
+        <odataelk:transform-to-elk-bool filter="#[payload]" propPrefix="ach.fields"/>
     </flow>
 
 </mule>
