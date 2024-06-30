@@ -17,10 +17,10 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
 
   @Test
   public void executeSayHiOperation() throws Exception {
-    String payloadValue = (flowRunner("parse").run()
+    String payloadValue = (String) (flowRunner("parse").run()
                                       .getMessage()
                                       .getPayload()
-                                      .getValue()).toString();
+                                      .getValue());
 
     assertThat(payloadValue, is("{\"query\":{\"match_phrase\":{\"newName\":\"Naveen\"},\"size\":500,\"_source\":{\"includes\":[\"*\"]},\"from\":0}}"));
   }

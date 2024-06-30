@@ -46,7 +46,7 @@ public class ODataELKOperations {
 	@MediaType(value = ANY, strict = false)
 	@Throws(ODataELKErrorTypeProvider.class)
 	@Alias("generate-elk-dsl-query")
-	public JSONObject generateELKDSLQuery(
+	public String generateELKDSLQuery(
 			@Expression(ExpressionSupport.SUPPORTED) @Example("log_*") @DisplayName("ELK Index") @Summary("Elasticsearch Index Name for searching data") @Alias("elkIndex") String elkIndex,
 
 			@Expression(ExpressionSupport.SUPPORTED) @Example("name eq 'Naveen'") @DisplayName("Filter") @Summary("Filter string with logical and binary operators to filter data") @Alias("filter") String filter,
@@ -57,12 +57,12 @@ public class ODataELKOperations {
 
 			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "500") @Example("500") @DisplayName("Max") @Summary("Option requests the number of items in the queried collection to be included in the result") @Alias("top") int top) {
 		try {
-			logger.info("Parsing filter: {}", filter);
+			logger.debug("Parsing filter: {}", filter);
 			JSONObject result = parseOrExpr(new Tokenizer(filter), elkIndex);
 			JSONObject finalResult = applyOptions(result, select, top, offset);
-			// String resultString = finalResult.toString();
-			logger.info("Parsed Elasticsearch DSL: {}", finalResult);
-			return finalResult;
+			String resultString = finalResult.toString();
+			logger.debug("Generated Elasticsearch DSL: {}", resultString);
+			return resultString;
 		} catch (ModuleException e) {
 			throw e;
 		} catch (Exception e) {
