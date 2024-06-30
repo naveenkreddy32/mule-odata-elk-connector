@@ -58,9 +58,9 @@ public class ODataELKOperations {
 
 			@Expression(ExpressionSupport.SUPPORTED) @Optional(defaultValue = "500") @Example("500") @DisplayName("Max") @Summary("Option requests the number of items in the queried collection to be included in the result") @Alias("top") int top) {
 		try {
-			logger.debug("Parsing filter: {}", filter);
+			logger.debug("Parsing filter: {}, select: {}, offest: {}, max: {}", filter, select, offset, top);
 			JSONObject result = parseOrExpr(new Tokenizer(filter), propPrefix);
-			JSONObject finalResult = applyOptions(result, select, top, offset);
+			JSONObject finalResult = applyOptions(result, select, top, offset, propPrefix);
 			String resultString = finalResult.toString();
 			logger.debug("Generated Elasticsearch DSL: {}", resultString);
 			return resultString;
@@ -81,7 +81,7 @@ public class ODataELKOperations {
 		if (orList.size() == 1) {
 			return orList.get(0);
 		}
-		
+
 		JSONObject orQuery = new JSONObject();
 		orQuery.put("bool", new JSONObject().put("should", new JSONArray(orList)));
 		logger.debug("parseOrExpr: {}", orQuery);
@@ -114,7 +114,8 @@ public class ODataELKOperations {
 		String keyName = tokenizer.next();
 		String left = getProperty(propPrefix + "." + keyName);
 		if (left == null) {
-			throw new ModuleException("Invalid input field '" + keyName + "'. Please check YAML file", ODataELKErrors.BAD_REQUEST);
+			throw new ModuleException("Invalid filter field '" + keyName + "'. Please check YAML file",
+					ODataELKErrors.BAD_REQUEST);
 		}
 		String op = tokenizer.next();
 		Object right = tokenizer.nextValue();
@@ -147,13 +148,26 @@ public class ODataELKOperations {
 		return comparisonQuery;
 	}
 
-	private JSONObject applyOptions(JSONObject query, String select, Integer top, Integer offset) {
+	private JSONObject applyOptions(JSONObject query, String select, Integer top, Integer offset, String propPrefix) {
 		JSONObject options = new JSONObject();
 		options.put("query", query);
 
-		if (select != null && !select.isEmpty()) {
+		if (select.equals("*")) {
 			query.put("_source", new JSONObject().put("includes", new JSONArray(select.split(","))));
+		} else {
+			List<String> selectList = new ArrayList<>();
+
+			for (String field : select.split(",")) {
+				String mappedField = getProperty(propPrefix + "." + field);
+				if (mappedField == null && !field.equals("*")) {
+					throw new ModuleException("Invalid select field '" + field + "'. Please check YAML file",
+							ODataELKErrors.BAD_REQUEST);
+				}
+				selectList.add(mappedField);
+			}
+			query.put("_source", new JSONObject().put("includes", new JSONArray(selectList)));
 		}
+
 		if (top != null) {
 			query.put("size", top);
 		}

@@ -32,18 +32,46 @@ public class ODataELKOperationsTestCase extends MuleArtifactFunctionalTestCase {
 		assertThat(payloadValue, is(
 				"{\"query\":{\"match_phrase\":{\"newName\":\"Naveen\"},\"size\":500,\"_source\":{\"includes\":[\"*\"]},\"from\":0}}"));
 	}
+	
+	@Test
+	public void simpleFilterWithSelect() throws Exception {
+		String filter = "name eq 'Naveen'";
+		String sel = "name";
+		CoreEvent parse = flowRunner("parse").withPayload(filter).withVariable("select", sel).run();
+		String payloadValue = (String) (parse.getMessage().getPayload().getValue());
+
+		assertThat(payloadValue, is(
+				"{\"query\":{\"match_phrase\":{\"newName\":\"Naveen\"},\"size\":500,\"_source\":{\"includes\":[\"newName\"]},\"from\":0}}"));
+	}
 
 	@Test
-	public void validateBadRequestErrType() throws Exception {
+	public void validateFilterBadRequestErrType() throws Exception {
 		String filter = "lname eq 'Naveen'";
 		flowRunner("parse").withPayload(filter).runExpectingException(errorType("ODATAELK", "BAD_REQUEST"));
 	}
-	
+
 	@Test
-	public void validateBadRequestErrMsg() throws Exception {
+	public void validateFilterBadRequestErrMsg() throws Exception {
 		String filter = "lname eq 'Naveen'";
 		Exception e = flowRunner("parse").withPayload(filter).runExpectingException();
-		assertThat(e.getMessage(), is("Invalid input field 'lname'. Please check YAML file."));
+		assertThat(e.getMessage(), is("Invalid filter field 'lname'. Please check YAML file."));
+
+	}
+
+	@Test
+	public void validateSelectBadRequestErrType() throws Exception {
+		String filter = "name eq 'Naveen'";
+		String sel = "lname";
+		flowRunner("parse").withPayload(filter).withVariable("select", sel)
+				.runExpectingException(errorType("ODATAELK", "BAD_REQUEST"));
+	}
+
+	@Test
+	public void validateSelectBadRequestErrMsg() throws Exception {
+		String filter = "name eq 'Naveen'";
+		String sel = "lname";
+		Exception e = flowRunner("parse").withPayload(filter).withVariable("select", sel).runExpectingException();
+		assertThat(e.getMessage(), is("Invalid select field 'lname'. Please check YAML file."));
 
 	}
 }
