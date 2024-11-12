@@ -1,0 +1,63 @@
+updated class
+
+private JSONObject parseComparisonExpr(Tokenizer tokenizer, String propPrefix) {
+    if (tokenizer.consume("(")) {
+        JSONObject expr = parseOrExpr(tokenizer, propPrefix);
+        tokenizer.consume(")");
+        return expr;
+    }
+
+    String keyName = tokenizer.next();
+    String left = getProperty(propPrefix + "." + keyName);
+    if (left == null) {
+        throw new ModuleException("Invalid filter field '" + keyName + "'. Please check if its correct/present in YAML file",
+                ODataELKErrors.BAD_REQUEST);
+    }
+    String op = tokenizer.next();
+    Object right = tokenizer.nextValue();
+
+    JSONObject comparisonQuery = new JSONObject();
+
+    // Handle range queries
+    if ("gt".equals(op) || "ge".equals(op) || "lt".equals(op) || "le".equals(op)) {
+        // Check if the 'range' object already exists
+        JSONObject rangeQuery = comparisonQuery.has("range") ? comparisonQuery.getJSONObject("range") : new JSONObject();
+        
+        // If no range object exists for the current field, create a new one
+        JSONObject fieldRange = rangeQuery.has(left) ? rangeQuery.getJSONObject(left) : new JSONObject();
+
+        switch (op) {
+        case "gt":
+            fieldRange.put("gt", right);
+            break;
+        case "ge":
+            fieldRange.put("gte", right);
+            break;
+        case "lt":
+            fieldRange.put("lt", right);
+            break;
+        case "le":
+            fieldRange.put("lte", right);
+            break;
+        }
+
+        rangeQuery.put(left, fieldRange);
+        comparisonQuery.put("range", rangeQuery);
+    } else {
+        // Handle other comparison operators (eq, ne, etc.)
+        switch (op) {
+        case "eq":
+            comparisonQuery.put("match_phrase", new JSONObject().put(left, right));
+            break;
+        case "ne":
+            comparisonQuery.put("bool", new JSONObject().put("must_not",
+                    new JSONObject().put("match_phrase", new JSONObject().put(left, right))));
+            break;
+        default:
+            throw new IllegalArgumentException("Unsupported comparison operator: " + op);
+        }
+    }
+
+    logger.debug("parseComparisonExpr: {}", comparisonQuery);
+    return comparisonQuery;
+}
